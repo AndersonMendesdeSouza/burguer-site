@@ -12,7 +12,7 @@ import { OrderService } from "../../service/order.service";
 import { formatOrderCode } from "../../utils/formatOrderCode";
 import styles from "./Orders.module.css";
 
-type TabKey = "active" | "finished" | "canceled";
+type TabKey = "all" | "active" | "finished" | "canceled";
 
 type OrderStep = "received" | "preparing" | "route" | "delivered";
 
@@ -135,10 +135,6 @@ function OrderCard({
       <div className={styles.orderTop}>
         <div>
           <h2>Pedido {getOrderCode(order)}</h2>
-          <p>
-            <strong>{STATUS_LABELS[order.status] || order.status}</strong>
-            <span>• Status do pedido</span>
-          </p>
         </div>
         <StatusBadge status={order.status} />
       </div>
@@ -180,7 +176,7 @@ function OrderCard({
 export default function Orders() {
   const navigate = useNavigate();
   const [orders, setOrders] = useState<OrderResponseDto[]>([]);
-  const [activeTab, setActiveTab] = useState<TabKey>("active");
+  const [activeTab, setActiveTab] = useState<TabKey>("all");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -216,6 +212,8 @@ export default function Orders() {
   }, []);
 
   const filteredOrders = useMemo(() => {
+    if (activeTab === "all") return orders;
+
     return orders.filter((order) => getTabFromStatus(order.status) === activeTab);
   }, [activeTab, orders]);
 
@@ -233,10 +231,19 @@ export default function Orders() {
       <main className={styles.content}>
         <h1 className={styles.title}>Pedidos</h1>
 
-        <div className={styles.tabs}>
+        <div className={styles.tabs} role="group" aria-label="Filtrar pedidos">
+          <button
+            className={activeTab === "all" ? styles.activeTab : ""}
+            type="button"
+            aria-pressed={activeTab === "all"}
+            onClick={() => setActiveTab("all")}
+          >
+            Todos
+          </button>
           <button
             className={activeTab === "active" ? styles.activeTab : ""}
             type="button"
+            aria-pressed={activeTab === "active"}
             onClick={() => setActiveTab("active")}
           >
             Em andamento
@@ -244,6 +251,7 @@ export default function Orders() {
           <button
             className={activeTab === "finished" ? styles.activeTab : ""}
             type="button"
+            aria-pressed={activeTab === "finished"}
             onClick={() => setActiveTab("finished")}
           >
             Finalizados
@@ -251,6 +259,7 @@ export default function Orders() {
           <button
             className={activeTab === "canceled" ? styles.activeTab : ""}
             type="button"
+            aria-pressed={activeTab === "canceled"}
             onClick={() => setActiveTab("canceled")}
           >
             Cancelados
@@ -262,7 +271,11 @@ export default function Orders() {
         ) : error ? (
           <div className={styles.emptyState}>{error}</div>
         ) : filteredOrders.length === 0 ? (
-          <div className={styles.emptyState}>Nenhum pedido nesta categoria.</div>
+          <div className={styles.emptyState}>
+            {activeTab === "all"
+              ? "Você ainda não tem pedidos."
+              : "Nenhum pedido nesta categoria."}
+          </div>
         ) : (
           <div className={styles.ordersList}>
             {filteredOrders.map((order) => (

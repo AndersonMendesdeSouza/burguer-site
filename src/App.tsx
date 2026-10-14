@@ -30,7 +30,7 @@ function App() {
           <Route path="checkout" element={<Checkout />} />
           <Route path="order-inform" element={<OrderInform />} />
           <Route path="pedidos" element={<Orders />} />
-          <Route path="favoritos" element={<Favorites />} />
+          {/* <Route path="favoritos" element={<Favorites />} /> */}
           <Route path="mensagens" element={<Messages />} />
           <Route path="mensagens/:threadId" element={<MessageDetails />} />
           <Route path="perfil" element={<Profile />} />

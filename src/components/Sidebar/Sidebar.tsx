@@ -25,7 +25,7 @@ export function Sidebar() {
             <FiClipboard className={styles.icon} />
             <span>Pedidos</span>
           </NavLink>
-
+{/* 
           <NavLink
             to="/favoritos"
             className={({ isActive }) =>
@@ -34,7 +34,7 @@ export function Sidebar() {
           >
             <FiHeart className={styles.icon} />
             <span>Favoritos</span>
-          </NavLink>
+          </NavLink> */}
 
           <NavLink
             to="/perfil"

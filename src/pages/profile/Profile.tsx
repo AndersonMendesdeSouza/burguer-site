@@ -1,7 +1,6 @@
 import {
   ArrowLeft,
   Bell,
-  CalendarDays,
   ChevronRight,
   Check,
   CircleHelp,
@@ -30,6 +29,9 @@ import { AddressService } from "../../service/address.service";
 import type { AddressResponseDto } from "../../dtos/response/address-response.dto";
 import { getRequestErrorMessage } from "../../utils/getRequestErrorMessage";
 import { useLocation, useNavigate } from "react-router-dom";
+import { OrderService } from "../../service/order.service";
+import type { OrderResponseDto } from "../../dtos/response/order-response.dto";
+import { formatOrderCode } from "../../utils/formatOrderCode";
 
 const profileActions = [
   {
@@ -42,21 +44,21 @@ const profileActions = [
     subtitle: "Gerenciar",
     icon: MapPin,
   },
-  {
-    title: "Mensagens",
-    subtitle: "Falar com a loja",
-    icon: MessageCircle,
-  },
-  {
-    title: "Cupons",
-    subtitle: "Ver cupons",
-    icon: Ticket,
-  },
-  {
-    title: "Pagamentos",
-    subtitle: "Formas salvas",
-    icon: CreditCard,
-  },
+  // {
+  //   title: "Mensagens",
+  //   subtitle: "Falar com a loja",
+  //   icon: MessageCircle,
+  // },
+  // {
+  //   title: "Cupons",
+  //   subtitle: "Ver cupons",
+  //   icon: Ticket,
+  // },
+  // {
+  //   title: "Pagamentos",
+  //   subtitle: "Formas salvas",
+  //   icon: CreditCard,
+  // },
 ];
 
 function formatRegistrationDate(date?: string) {
@@ -152,6 +154,9 @@ export default function Profile() {
     null,
   );
   const [addressError, setAddressError] = useState("");
+  const [recentOrder, setRecentOrder] = useState<OrderResponseDto | null>(null);
+  const [loadingOrder, setLoadingOrder] = useState(true);
+  const [orderError, setOrderError] = useState("");
   const hasLoadedUser = useRef(false);
   const optionEffectTimeoutRef = useRef<number | null>(null);
   const optionActionTimeoutRef = useRef<number | null>(null);
@@ -322,6 +327,34 @@ export default function Profile() {
   }, []);
 
   useEffect(() => {
+    let active = true;
+
+    async function loadRecentOrder() {
+      try {
+        const orders = await OrderService.findAll();
+        if (!active) return;
+
+        setRecentOrder(orders[orders.length - 1] ?? null);
+        setOrderError("");
+      } catch (error) {
+        if (!active) return;
+
+        setOrderError(
+          getRequestErrorMessage(error, "Não foi possível carregar o pedido recente."),
+        );
+      } finally {
+        if (active) setLoadingOrder(false);
+      }
+    }
+
+    void loadRecentOrder();
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  useEffect(() => {
     return () => {
       if (optionEffectTimeoutRef.current) {
         window.clearTimeout(optionEffectTimeoutRef.current);
@@ -367,24 +400,24 @@ export default function Profile() {
       icon: User,
       onClick: () => alert("Edit"),
     },
-    {
-      title: "Notificações",
-      subtitle: "Preferências de alertas",
-      icon: Bell,
-      onClick: () => alert("Not"),
-    },
+    // {
+    //   title: "Notificações",
+    //   subtitle: "Preferências de alertas",
+    //   icon: Bell,
+    //   onClick: () => alert("Not"),
+    // },
     {
       title: "Ajuda e suporte",
       subtitle: "Fale conosco",
       icon: CircleHelp,
       onClick: () => alert("Help"),
     },
-    {
-      title: "Configurações",
-      subtitle: "Privacidade e segurança",
-      icon: Settings,
-      onClick: () => alert("config"),
-    },
+    // {
+    //   title: "Configurações",
+    //   subtitle: "Privacidade e segurança",
+    //   icon: Settings,
+    //   onClick: () => alert("config"),
+    // },
     {
       title: "Sair da conta",
       subtitle: "Encerrar sessão",
@@ -709,34 +742,58 @@ export default function Profile() {
             <section className={styles.recentSection}>
               <div className={styles.sectionTitle}>
                 <h2>Pedido recente</h2>
-                <button type="button">
+                <button type="button" onClick={() => navigate("/pedidos")}>
                   Ver todos
-                  <ChevronRight size={20} />
+                  <ChevronRight size={16} />
                 </button>
               </div>
 
-              <button className={styles.recentOrder} type="button">
-                <img
-                  src="https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=500&q=80"
-                  alt="Monster Bacon"
-                />
-
-                <div className={styles.orderInfo}>
-                  <span className={styles.status}>Entregue</span>
-                  <strong>Monster Bacon</strong>
-                  <p>1x Monster Bacon</p>
-                  <p>1x Batata Rústica</p>
-                  <span className={styles.orderDate}>
-                    <CalendarDays size={14} />
-                    25/05/2026 - 19:48
+              {loadingOrder ? (
+                <p className={styles.recentMessage} role="status">
+                  Carregando pedido recente...
+                </p>
+              ) : orderError ? (
+                <p className={styles.recentMessage} role="alert">
+                  {orderError}
+                </p>
+              ) : recentOrder ? (
+                <button
+                  className={styles.recentOrder}
+                  type="button"
+                  onClick={() =>
+                    navigate("/order-inform", { state: { orderId: recentOrder.id } })
+                  }
+                >
+                  <span className={styles.orderInfo}>
+                    {recentOrder.items[0]?.imageUrl && (
+                      <img
+                        className={styles.orderImage}
+                        src={recentOrder.items[0].imageUrl}
+                        alt={recentOrder.items[0].name}
+                        width={48}
+                        height={48}
+                      />
+                    )}
+                    <span className={styles.orderText}>
+                      <strong title={recentOrder.items[0]?.name}>
+                        {recentOrder.items[0]?.name || `Pedido ${formatOrderCode(recentOrder.code)}`}
+                      </strong>
+                      <time className={styles.orderDate} dateTime={recentOrder.createdAt}>
+                        {new Date(recentOrder.createdAt).toLocaleDateString("pt-BR")}
+                      </time>
+                    </span>
                   </span>
-                </div>
-
-                <div className={styles.orderRight}>
-                  <ChevronRight size={22} />
-                  <strong>R$ 49,90</strong>
-                </div>
-              </button>
+                  <strong className={styles.orderValue}>
+                    {Number(recentOrder.total).toLocaleString("pt-BR", {
+                      style: "currency",
+                      currency: "BRL",
+                    })}
+                  </strong>
+                  <ChevronRight className={styles.chevron} size={16} />
+                </button>
+              ) : (
+                <p className={styles.recentMessage}>Você ainda não tem pedidos.</p>
+              )}
             </section>
 
             <section

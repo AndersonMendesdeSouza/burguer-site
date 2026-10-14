@@ -287,7 +287,7 @@ export function Header({
         )}
 
         <div className={styles.headerActions} style={headerActionsStyle}>
-          <button
+          {/* <button
             className={styles.messageButton}
             style={messageButtonStyle}
             type="button"
@@ -299,7 +299,7 @@ export function Header({
             aria-label="Abrir mensagens"
           >
             <MessageCircle size={22} />
-          </button>
+          </button> */}
 
           <button
             className={styles.cartButton}
