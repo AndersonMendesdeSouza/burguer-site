@@ -1,7 +1,9 @@
 import { useEffect, useState, type CSSProperties, type RefObject } from "react";
-import { MessageCircle, Search, ShoppingCart, X } from "lucide-react";
+import { Search, ShoppingCart, X } from "lucide-react";
+// import { MessageCircle } from "lucide-react";
 import styles from "./Header.module.css";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
+// import { useLocation } from "react-router-dom";
 import {
   CART_STORAGE_KEY,
   CART_UPDATED_EVENT,
@@ -126,12 +128,12 @@ const headerIconButtonStyle: CSSProperties = {
   cursor: "pointer",
 };
 
-const messageButtonStyle: CSSProperties = {
-  ...headerIconButtonStyle,
-  borderColor: "rgba(255, 212, 0, 0.32)",
-  background: "rgba(255, 212, 0, 0.08)",
-  color: "#ffd400",
-};
+// const messageButtonStyle: CSSProperties = {
+//   ...headerIconButtonStyle,
+//   borderColor: "rgba(255, 212, 0, 0.32)",
+//   background: "rgba(255, 212, 0, 0.08)",
+//   color: "#ffd400",
+// };
 
 const cartButtonStyle: CSSProperties = {
   ...headerIconButtonStyle,
@@ -220,7 +222,7 @@ export function Header({
 }: HeaderProps) {
   const isDesktopHeader = useDesktopHeader();
   const navigate = useNavigate();
-  const location = useLocation();
+  // const location = useLocation();
   const { isAuthenticated, loading: authLoading } = useAuth();
   const [storedCartCount, setStoredCartCount] = useState(getCartQuantity);
   const badgeCount = cartCount ?? storedCartCount;

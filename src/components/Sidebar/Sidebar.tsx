@@ -1,5 +1,6 @@
 import { NavLink } from "react-router-dom";
-import { FiClipboard, FiHeart, FiHome, FiUser } from "react-icons/fi";
+import { FiClipboard, FiHome, FiUser } from "react-icons/fi";
+// import { FiHeart } from "react-icons/fi";
 import styles from "./Sidebar.module.css";
 
 export function Sidebar() {

@@ -9,7 +9,7 @@ import OrderInform from "./pages/orderinfroma/order-inform";
 import { DashboardLayout } from "./components/layouts/DashboardLayout";
 import Profile from "./pages/profile/Profile";
 import Orders from "./pages/orders/Orders";
-import Favorites from "./pages/favorites/Favorites";
+// import Favorites from "./pages/favorites/Favorites";
 import Login from "./pages/login/login";
 import Register from "./pages/register/register";
 import Messages from "./pages/messages/Messages";
