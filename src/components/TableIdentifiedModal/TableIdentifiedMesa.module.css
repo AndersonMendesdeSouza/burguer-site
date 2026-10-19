@@ -1,0 +1,31 @@
+.indicator {
+  position: fixed;
+  display: flex;
+  text-align: center;
+  z-index: 80;
+  display: flex;
+  min-height: 32px;
+  align-items: center;
+  justify-content:center;
+  color: rgb(255, 255, 255);
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 18px;
+  width: 100%;
+}
+
+.tableNumber {
+  min-width: 0;
+  overflow: hidden;
+  color: #ffd400;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (max-width: 640px) {
+  .indicator {
+    padding-right: 12px;
+    padding-left: 12px;
+  }
+}

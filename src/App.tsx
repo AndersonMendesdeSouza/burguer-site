@@ -2,7 +2,6 @@ import { Navigate, Route, Routes } from "react-router-dom";
 
 import { DashboardLayout } from "./components/layouts/DashboardLayout";
 import ScrollToTop from "./components/ScrollToTop";
-import TableIdentifiedModal from "./components/TableIdentifiedModal/TableIdentifiedModal";
 import Cart from "./pages/cart/Cart";
 import Checkout from "./pages/checkout/Checkout";
 import FoodDetails from "./pages/food/FoodDetails";
@@ -16,6 +15,8 @@ import Login from "./pages/login/login";
 import MessageDetails from "./pages/messages/MessageDetails";
 import Messages from "./pages/messages/Messages";
 import Register from "./pages/register/register";
+import TableIdentifiedMesa from "./components/TableIdentifiedModal/TableIdentifiedMesa";
+import TableIdentifiedModal from "./components/TableIdentifiedMesa/TableIdentifiedModal";
 
 function App() {
   const [mesaId] = useState(() => {
@@ -47,6 +48,7 @@ function App() {
           onClose={() => setShowTableModal(false)}
         />
       )}
+      <TableIdentifiedMesa mesaId={mesaId} />
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
