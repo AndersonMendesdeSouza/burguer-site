@@ -206,10 +206,10 @@ export default function Main() {
                         openNow
                           ? undefined
                           : {
-                              background: "rgba(255, 0, 0, 0.22)",
-                              border: "1px solid rgba(255, 0, 0, 0.85)",
-                              color: "rgba(255, 140, 140, 0.95)",
-                            }
+                            background: "rgba(255, 0, 0, 0.22)",
+                            border: "1px solid rgba(255, 0, 0, 0.85)",
+                            color: "rgba(255, 140, 140, 0.95)",
+                          }
                       }
                     >
                       {openNow ? "ABERTO AGORA" : "FECHADO"}
@@ -225,8 +225,8 @@ export default function Main() {
                           openNow
                             ? undefined
                             : {
-                                color: "rgba(255, 255, 255, 0.78)",
-                              }
+                              color: "rgba(255, 255, 255, 0.78)",
+                            }
                         }
                       >
                         Abrimos em {left} {left === 1 ? "hora" : "horas"}
@@ -249,9 +249,8 @@ export default function Main() {
               <button
                 type="button"
                 onClick={() => setCategory(null)}
-                className={`${styles.categoryPill} ${
-                  category === null ? styles.categoryActive : ""
-                }`}
+                className={`${styles.categoryPill} ${category === null ? styles.categoryActive : ""
+                  }`}
               >
                 Todos
               </button>
@@ -263,9 +262,8 @@ export default function Main() {
                     key={item.name}
                     type="button"
                     onClick={() => setCategory(item.name)}
-                    className={`${styles.categoryPill} ${
-                      category === item.name ? styles.categoryActive : ""
-                    }`}
+                    className={`${styles.categoryPill} ${category === item.name ? styles.categoryActive : ""
+                      }`}
                   >
                     <Icon size={18} />
                     <span>{item.name}</span>

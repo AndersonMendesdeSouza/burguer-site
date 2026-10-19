@@ -1,21 +1,36 @@
 import { Navigate, Route, Routes } from "react-router-dom";
 
+import { DashboardLayout } from "./components/layouts/DashboardLayout";
+import ScrollToTop from "./components/ScrollToTop";
 import Cart from "./pages/cart/Cart";
-import Main from "./pages/main/Main";
 import Checkout from "./pages/checkout/Checkout";
 import FoodDetails from "./pages/food/FoodDetails";
-import ScrollToTop from "./components/ScrollToTop";
+import Main from "./pages/main/Main";
 import OrderInform from "./pages/orderinfroma/order-inform";
-import { DashboardLayout } from "./components/layouts/DashboardLayout";
-import Profile from "./pages/profile/Profile";
 import Orders from "./pages/orders/Orders";
+import Profile from "./pages/profile/Profile";
 // import Favorites from "./pages/favorites/Favorites";
+import { useEffect } from "react";
 import Login from "./pages/login/login";
-import Register from "./pages/register/register";
-import Messages from "./pages/messages/Messages";
 import MessageDetails from "./pages/messages/MessageDetails";
+import Messages from "./pages/messages/Messages";
+import Register from "./pages/register/register";
 
 function App() {
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const mesaId = params.get("mesa");
+
+    if (mesaId) {
+      sessionStorage.setItem("mesaId", mesaId);
+
+      alert(`Mesa identificada: ${mesaId}`);
+    } else {
+      sessionStorage.removeItem("mesaId");
+    }
+  }, []);
+
   return (
     <>
       <ScrollToTop />
