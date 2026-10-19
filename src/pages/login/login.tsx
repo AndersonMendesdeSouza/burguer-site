@@ -197,7 +197,7 @@ export default function Login() {
           </form>
 
           <p className={styles.signupText}>
-            Novo no Mais Burguer? <Link to="/register">Criar conta</Link>
+            Novo no Burguer? <Link to="/register">Criar conta</Link>
           </p>
         </div>
       </section>

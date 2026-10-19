@@ -151,7 +151,7 @@ export default function Register() {
         <div className={styles.content}>
           <header className={styles.header}>
             <h1>Criar conta</h1>
-            <p>Entre para o clube Mais Burguer</p>
+            <p>Entre para o clube Burguer</p>
           </header>
 
           <form
@@ -308,7 +308,7 @@ export default function Register() {
 
           <p className={styles.termsText}>
             Ao clicar em Cadastrar, você concorda com os Termos de Serviço e a
-            Política de Privacidade do Mais Burguer.
+            Política de Privacidade do Burguer.
           </p>
         </div>
       </section>

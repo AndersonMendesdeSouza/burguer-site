@@ -18,7 +18,7 @@ export type ChatThread = {
 export const mockThreads: ChatThread[] = [
   {
     id: "support",
-    name: "Atendimento Mais Burguer",
+    name: "Atendimento Burguer",
     status: "Online agora",
     preview: "Seu pedido já está em preparo.",
     time: "18:42",

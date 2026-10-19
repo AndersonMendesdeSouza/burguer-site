@@ -257,10 +257,10 @@ export function Header({
             className={styles.brandLogo}
             style={brandLogoStyle}
             src="/hamburguer.png"
-            alt="Logo Mais Burguer"
+            alt="Logo Burguer"
           />
           <span className={styles.brandName} style={brandNameStyle}>
-            Mais Burguer
+            Burguer
           </span>
         </div>
 
