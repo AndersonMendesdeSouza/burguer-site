@@ -19,6 +19,7 @@ import {
   QrCode,
   ReceiptText,
   Send,
+  UtensilsCrossed,
   XCircle,
 } from "lucide-react";
 import ConfirmationModal from "../../components/ConfirmationModal/ConfirmationModal";
@@ -268,6 +269,7 @@ export default function OrderInform() {
     ? formatOrderCode(order.code)
     : state.orderNumber || "Nao informado";
   const orderPaymentMethod = order?.paymentMethod || state.payment;
+  const tableNumber = order?.mesaId?.trim();
   const orderPaymentLabel = paymentLabel(orderPaymentMethod);
   const PaymentStatusIcon = paymentIcon(orderPaymentMethod);
   const stateAddressLine = state.address?.street
@@ -551,9 +553,18 @@ export default function OrderInform() {
 
           <div className={styles.sideGrid}>
             <section className={styles.card}>
-              <div className={styles.sectionTitle}>
-                <MapPin />
-                Entrega
+              <div className={cx(styles.sectionTitle, styles.sectionTitleBetween)}>
+                <span className={styles.sectionTitleLabel}>
+                  <MapPin />
+                  Entrega
+                </span>
+                {tableNumber ? (
+                  <span className={styles.tableBadge}>
+                    <UtensilsCrossed aria-hidden="true" />
+                    <span>Mesa</span>
+                    <strong>{tableNumber}</strong>
+                  </span>
+                ) : null}
               </div>
 
               {detailRows.map((row) => {

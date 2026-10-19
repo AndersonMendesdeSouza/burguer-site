@@ -220,6 +220,8 @@ export default function Checkout() {
   }
 
   function buildOrderPayload(): OrderRequestDto {
+    const mesaId = sessionStorage.getItem('mesaId')
+    alert(mesaId)
     const extraInfo = [
       orderObs.trim() ? `Obs pedido: ${orderObs.trim()}` : "",
       payment === PaymentMethod.CASH && needChange === true
@@ -229,6 +231,7 @@ export default function Checkout() {
     const orderObservation = extraInfo.join(" | ");
 
     return {
+      mesaId: mesaId ?? null,
       paymentMethod: payment,
       customerName: fullName.trim(),
       customerPhone: onlyDigits(phone),
@@ -337,19 +340,16 @@ export default function Checkout() {
         <div className={styles.stepBarContainer}>
           <div className={styles.stepBar}>
             <div
-              className={`${styles.stepSeg} ${
-                step3Done ? styles.stepSegOn : ""
-              }`}
+              className={`${styles.stepSeg} ${step3Done ? styles.stepSegOn : ""
+                }`}
             />
             <div
-              className={`${styles.stepSeg} ${
-                step2Done ? styles.stepSegOn : ""
-              }`}
+              className={`${styles.stepSeg} ${step2Done ? styles.stepSegOn : ""
+                }`}
             />
             <div
-              className={`${styles.stepSeg} ${
-                step1Done ? styles.stepSegOn : ""
-              }`}
+              className={`${styles.stepSeg} ${step1Done ? styles.stepSegOn : ""
+                }`}
             />
           </div>
         </div>
@@ -477,9 +477,8 @@ export default function Checkout() {
                   <button
                     key={address.id}
                     type="button"
-                    className={`${styles.addressCard} ${
-                      active ? styles.addressCardActive : ""
-                    }`}
+                    className={`${styles.addressCard} ${active ? styles.addressCardActive : ""
+                      }`}
                     onClick={() => handleSelectAddress(address.id)}
                   >
                     <div className={styles.addressTopRow}>
@@ -529,9 +528,8 @@ export default function Checkout() {
           <div className={styles.payList}>
             <button
               type="button"
-              className={`${styles.payItem} ${
-                payment === PaymentMethod.PIX ? styles.payItemActive : ""
-              }`}
+              className={`${styles.payItem} ${payment === PaymentMethod.PIX ? styles.payItemActive : ""
+                }`}
               onClick={() => setPayment(PaymentMethod.PIX)}
             >
               <div className={styles.payLeft}>
@@ -544,19 +542,17 @@ export default function Checkout() {
                 </div>
               </div>
               <div
-                className={`${styles.radio} ${
-                  payment === PaymentMethod.PIX ? styles.radioOn : ""
-                }`}
+                className={`${styles.radio} ${payment === PaymentMethod.PIX ? styles.radioOn : ""
+                  }`}
               />
             </button>
 
             <button
               type="button"
-              className={`${styles.payItem} ${
-                payment === PaymentMethod.CREDIT_CARD
-                  ? styles.payItemActive
-                  : ""
-              }`}
+              className={`${styles.payItem} ${payment === PaymentMethod.CREDIT_CARD
+                ? styles.payItemActive
+                : ""
+                }`}
               onClick={() => setPayment(PaymentMethod.CREDIT_CARD)}
             >
               <div className={styles.payLeft}>
@@ -569,17 +565,15 @@ export default function Checkout() {
                 </div>
               </div>
               <div
-                className={`${styles.radio} ${
-                  payment === PaymentMethod.CREDIT_CARD ? styles.radioOn : ""
-                }`}
+                className={`${styles.radio} ${payment === PaymentMethod.CREDIT_CARD ? styles.radioOn : ""
+                  }`}
               />
             </button>
 
             <button
               type="button"
-              className={`${styles.payItem} ${
-                payment === PaymentMethod.DEBIT_CARD ? styles.payItemActive : ""
-              }`}
+              className={`${styles.payItem} ${payment === PaymentMethod.DEBIT_CARD ? styles.payItemActive : ""
+                }`}
               onClick={() => setPayment(PaymentMethod.DEBIT_CARD)}
             >
               <div className={styles.payLeft}>
@@ -592,17 +586,15 @@ export default function Checkout() {
                 </div>
               </div>
               <div
-                className={`${styles.radio} ${
-                  payment === PaymentMethod.DEBIT_CARD ? styles.radioOn : ""
-                }`}
+                className={`${styles.radio} ${payment === PaymentMethod.DEBIT_CARD ? styles.radioOn : ""
+                  }`}
               />
             </button>
 
             <button
               type="button"
-              className={`${styles.payItem} ${
-                payment === PaymentMethod.CASH ? styles.payItemActive : ""
-              }`}
+              className={`${styles.payItem} ${payment === PaymentMethod.CASH ? styles.payItemActive : ""
+                }`}
               onClick={() => setPayment(PaymentMethod.CASH)}
             >
               <div className={styles.payLeft}>
@@ -615,9 +607,8 @@ export default function Checkout() {
                 </div>
               </div>
               <div
-                className={`${styles.radio} ${
-                  payment === PaymentMethod.CASH ? styles.radioOn : ""
-                }`}
+                className={`${styles.radio} ${payment === PaymentMethod.CASH ? styles.radioOn : ""
+                  }`}
               />
             </button>
 
@@ -626,9 +617,8 @@ export default function Checkout() {
                 <div className={styles.payList}>
                   <button
                     type="button"
-                    className={`${styles.payItem} ${
-                      needChange === true ? styles.payItemActive : ""
-                    }`}
+                    className={`${styles.payItem} ${needChange === true ? styles.payItemActive : ""
+                      }`}
                     onClick={() => setNeedChange(true)}
                   >
                     <div className={styles.payLeft}>
@@ -643,17 +633,15 @@ export default function Checkout() {
                       </div>
                     </div>
                     <div
-                      className={`${styles.radio} ${
-                        needChange === true ? styles.radioOn : ""
-                      }`}
+                      className={`${styles.radio} ${needChange === true ? styles.radioOn : ""
+                        }`}
                     />
                   </button>
 
                   <button
                     type="button"
-                    className={`${styles.payItem} ${
-                      needChange === false ? styles.payItemActive : ""
-                    }`}
+                    className={`${styles.payItem} ${needChange === false ? styles.payItemActive : ""
+                      }`}
                     onClick={() => {
                       setNeedChange(false);
                       setCashChange("");
@@ -669,9 +657,8 @@ export default function Checkout() {
                       </div>
                     </div>
                     <div
-                      className={`${styles.radio} ${
-                        needChange === false ? styles.radioOn : ""
-                      }`}
+                      className={`${styles.radio} ${needChange === false ? styles.radioOn : ""
+                        }`}
                     />
                   </button>
                 </div>

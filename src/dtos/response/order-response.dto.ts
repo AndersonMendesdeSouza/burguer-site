@@ -12,6 +12,7 @@ type OrderHistory = {
 
 export interface OrderResponseDto {
   id: string;
+  mesaId?: string;
   userId: string;
   addressId?: string;
   chatId?: string;

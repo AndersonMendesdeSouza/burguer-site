@@ -420,6 +420,28 @@
   color: rgba(255, 255, 255, 0.74);
 }
 
+.tableBadge {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 6px;
+  min-width: 0;
+  padding: 6px 10px;
+  border: 1px solid rgba(255, 215, 0, 0.28);
+  border-radius: 6px;
+  background: rgba(255, 215, 0, 0.07);
+  color: var(--yellow);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.tableBadge strong {
+  font-size: 14px;
+  font-weight: 900;
+  overflow-wrap: anywhere;
+}
+
 .detailRow + .detailRow {
   border-top: 1px solid rgba(255, 255, 255, 0.08);
 }
@@ -820,6 +842,16 @@
 
   .sectionTitleLabel {
     gap: 5px;
+  }
+
+  .tableBadge {
+    gap: 5px;
+    padding: 5px 8px;
+    font-size: 10px;
+  }
+
+  .tableBadge strong {
+    font-size: 12px;
   }
 
   .detailsButton,

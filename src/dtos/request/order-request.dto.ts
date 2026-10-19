@@ -2,6 +2,7 @@ import type { PaymentMethodEnum } from "../enums/payment-method.enum";
 import type { OrderItem } from "../../types/order-item.type";
 
 export interface OrderRequestDto {
+  mesaId?: string | null;
   paymentMethod: PaymentMethodEnum;
   customerName: string;
   customerPhone: string;
