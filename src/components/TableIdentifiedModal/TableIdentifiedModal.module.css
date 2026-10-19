@@ -1,0 +1,71 @@
+.modal {
+  width: min(360px, calc(100% - 36px));
+  max-height: calc(100dvh - 36px);
+  padding: 24px 20px 20px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 14px;
+  background: #171717;
+  color: #fff;
+  font-family: inherit;
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+
+.modal::backdrop {
+  background: rgba(0, 0, 0, 0.62);
+  backdrop-filter: blur(5px);
+}
+
+.icon {
+  display: grid;
+  width: 52px;
+  height: 52px;
+  margin: 0 auto 16px;
+  place-items: center;
+  border-radius: 50%;
+  background: rgba(255, 212, 0, 0.14);
+  color: #ffd400;
+}
+
+.modal h2 {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 800;
+}
+
+.tableNumber {
+  margin: 12px 0;
+  color: #ffd400;
+  font-size: 32px;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.hint {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.66);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.closeButton {
+  width: 100%;
+  min-height: 44px;
+  margin-top: 20px;
+  border: 0;
+  border-radius: 10px;
+  background: #ffd400;
+  color: #111;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.closeButton:hover {
+  background: #efc600;
+}
+
+.closeButton:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 3px;
+}
