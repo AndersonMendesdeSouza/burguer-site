@@ -30,6 +30,8 @@ import type { OrderResponseDto } from "../../dtos/response/order-response.dto";
 import { ChatService } from "../../service/chat.service";
 import { formatOrderCode } from "../../utils/formatOrderCode";
 import { playNotificationSound } from "../../utils/notificationSound";
+import { getRequestErrorMessage } from "../../utils/getRequestErrorMessage";
+import { getOrderImageUrl, handleOrderImageError } from "../../utils/orderImage";
 import styles from "./order-inform.module.css";
 import type { ChatMessageResponseDto } from "../../dtos/response/chat-message-response.dto";
 
@@ -159,6 +161,7 @@ export default function OrderInform() {
   const navigate = useNavigate();
   const state = (location.state || {}) as OrderState;
   const [order, setOrder] = useState<OrderResponseDto | null>(null);
+  const [orderError, setOrderError] = useState("");
   const [isCanceling, setIsCanceling] = useState(false);
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [miniChatDraft, setMiniChatDraft] = useState("");
@@ -190,14 +193,19 @@ export default function OrderInform() {
           const previousStatus = previousStatusRef.current;
 
           setOrder(data);
+          setOrderError("");
           previousStatusRef.current = data.status;
 
           if (previousStatus && previousStatus !== data.status) {
             void playNotificationSound();
           }
         })
-        .catch(() => {
-          if (active) setOrder(null);
+        .catch((error: unknown) => {
+          if (!active) return;
+          setOrder(null);
+          setOrderError(
+            getRequestErrorMessage(error, "Não foi possível carregar o pedido."),
+          );
         });
     };
 
@@ -270,6 +278,7 @@ export default function OrderInform() {
     : state.orderNumber || "Nao informado";
   const orderPaymentMethod = order?.paymentMethod || state.payment;
   const tableNumber = order?.mesaId?.trim();
+  const canUseChat = Boolean(order?.userId);
   const orderPaymentLabel = paymentLabel(orderPaymentMethod);
   const PaymentStatusIcon = paymentIcon(orderPaymentMethod);
   const orderStatuses = statuses.map((step) => {
@@ -374,7 +383,9 @@ export default function OrderInform() {
     event.preventDefault();
 
     const text = miniChatDraft.trim();
-    if (!text || !order || isMiniChatReadOnly || isSendingChatMessage) return;
+    if (!text || !order || !canUseChat || isMiniChatReadOnly || isSendingChatMessage) {
+      return;
+    }
 
     setIsSendingChatMessage(true);
 
@@ -457,6 +468,10 @@ export default function OrderInform() {
           </div>
         </header>
 
+        {orderError && (
+          <p className={styles.emptyText} role="alert">{orderError}</p>
+        )}
+
         <section className={cx(styles.panel, styles.statusPanel)}>
           <div className={styles.statusTrack}>
             <div className={styles.statusTrackBase} />
@@ -519,17 +534,12 @@ export default function OrderInform() {
             {items.length ? (
               items.map((item, index) => (
                 <div key={`${item.id}-${index}`} className={styles.item}>
-                  {item.image ? (
-                    <img
-                      className={styles.thumb}
-                      src={item.image}
-                      alt={item.name}
-                    />
-                  ) : (
-                    <div className={styles.thumbPlaceholder}>
-                      <ReceiptText />
-                    </div>
-                  )}
+                  <img
+                    className={styles.thumb}
+                    src={getOrderImageUrl(item.image)}
+                    alt={item.name}
+                    onError={handleOrderImageError}
+                  />
                   <div className={styles.itemInfo}>
                     <div className={styles.itemName}>
                       {item.qty}x&nbsp; {item.name}
@@ -683,114 +693,125 @@ export default function OrderInform() {
           </div>
         </div>
 
-        <section ref={miniChatRef} className={styles.miniChatCard}>
-          <div className={styles.miniChatHeader}>
-            <div className={cx(styles.sectionTitle, styles.miniChatTitle)}>
-              <MessageCircle />
-              Chat do pedido
-            </div>
-            <span
-              className={cx(
-                styles.miniChatStatus,
-                isMiniChatReadOnly && styles.miniChatStatusReadOnly,
-              )}
-            >
-              {isMiniChatReadOnly ? "Somente leitura" : "Aberto"}
-            </span>
-          </div>
-
-          <div
-            ref={miniChatMessagesRef}
-            className={styles.miniChatMessages}
-            aria-label="Mensagens do pedido"
-          >
-            {miniChatMessages.length ? (
-              miniChatMessages.map((message) => {
-                const isMine =
-                  message.senderType !== ChatMessageSenderType.SYSTEM &&
-                  message.senderId === localStorage.getItem("userId");
-
-                return (
-                  <article
-                    key={message.id}
-                    className={cx(
-                      styles.miniChatBubble,
-                      isMine
-                        ? styles.miniChatBubbleCustomer
-                        : styles.miniChatBubbleStore,
-                    )}
-                  >
-                    <div>{message.text}</div>
-                    <span className={styles.miniChatTime}>
-                      {formatTime(message.createdAt)}
-                    </span>
-                  </article>
-                );
-              })
-            ) : (
-              <div className={styles.emptyText}>
-                Nenhuma mensagem encontrada.
+        {canUseChat && (
+          <section ref={miniChatRef} className={styles.miniChatCard}>
+            <div className={styles.miniChatHeader}>
+              <div className={cx(styles.sectionTitle, styles.miniChatTitle)}>
+                <MessageCircle />
+                Chat do pedido
               </div>
-            )}
-          </div>
-
-          <form
-            className={cx(
-              styles.miniChatForm,
-              isMiniChatReadOnly && styles.miniChatFormReadOnly,
-            )}
-            onSubmit={handleMiniChatSubmit}
-          >
-            <input
-              className={styles.miniChatInput}
-              value={isMiniChatReadOnly ? "" : miniChatDraft}
-              disabled={isMiniChatReadOnly || isSendingChatMessage || !order}
-              onChange={(event) => setMiniChatDraft(event.target.value)}
-              placeholder={
-                isMiniChatReadOnly
-                  ? "Atendimento encerrado - apenas leitura"
-                  : isSendingChatMessage
-                    ? "Enviando mensagem..."
-                  : "Digite sua mensagem"
-              }
-            />
-            {!isMiniChatReadOnly ? (
-              <button
-                type="submit"
-                className={styles.miniChatSendButton}
-                aria-label="Enviar mensagem"
-                disabled={isSendingChatMessage || !miniChatDraft.trim() || !order}
+              <span
+                className={cx(
+                  styles.miniChatStatus,
+                  isMiniChatReadOnly && styles.miniChatStatusReadOnly,
+                )}
               >
-                <Send />
-              </button>
-            ) : null}
-          </form>
-        </section>
+                {isMiniChatReadOnly ? "Somente leitura" : "Aberto"}
+              </span>
+            </div>
+
+            <div
+              ref={miniChatMessagesRef}
+              className={styles.miniChatMessages}
+              aria-label="Mensagens do pedido"
+            >
+              {miniChatMessages.length ? (
+                miniChatMessages.map((message) => {
+                  const isMine =
+                    message.senderType !== ChatMessageSenderType.SYSTEM &&
+                    message.senderId === localStorage.getItem("userId");
+
+                  return (
+                    <article
+                      key={message.id}
+                      className={cx(
+                        styles.miniChatBubble,
+                        isMine
+                          ? styles.miniChatBubbleCustomer
+                          : styles.miniChatBubbleStore,
+                      )}
+                    >
+                      <div>{message.text}</div>
+                      <span className={styles.miniChatTime}>
+                        {formatTime(message.createdAt)}
+                      </span>
+                    </article>
+                  );
+                })
+              ) : (
+                <div className={styles.emptyText}>
+                  Nenhuma mensagem encontrada.
+                </div>
+              )}
+            </div>
+
+            <form
+              className={cx(
+                styles.miniChatForm,
+                isMiniChatReadOnly && styles.miniChatFormReadOnly,
+              )}
+              onSubmit={handleMiniChatSubmit}
+            >
+              <input
+                className={styles.miniChatInput}
+                value={isMiniChatReadOnly ? "" : miniChatDraft}
+                disabled={isMiniChatReadOnly || isSendingChatMessage || !order}
+                onChange={(event) => setMiniChatDraft(event.target.value)}
+                placeholder={
+                  isMiniChatReadOnly
+                    ? "Atendimento encerrado - apenas leitura"
+                    : isSendingChatMessage
+                      ? "Enviando mensagem..."
+                    : "Digite sua mensagem"
+                }
+              />
+              {!isMiniChatReadOnly ? (
+                <button
+                  type="submit"
+                  className={styles.miniChatSendButton}
+                  aria-label="Enviar mensagem"
+                  disabled={isSendingChatMessage || !miniChatDraft.trim() || !order}
+                >
+                  <Send />
+                </button>
+              ) : null}
+            </form>
+          </section>
+        )}
       </div>
 
-      <div className={styles.mobileBottomBar}>
+      <div
+        className={cx(
+          styles.mobileBottomBar,
+          !canUseChat && styles.mobileBottomBarWithoutChat,
+        )}
+      >
         <div>
           <div className={styles.mobileBottomLabel}>Total do pedido</div>
           <div className={styles.mobileBottomTotal}>{brl(total)}</div>
         </div>
-        <div className={styles.mobileBottomDivider} />
-        <button
-          type="button"
-          onClick={() =>
-            miniChatRef.current?.scrollIntoView({
-              behavior: "smooth",
-              block: "end",
-            })
-          }
-          className={styles.supportButton}
-        >
-          <MessageCircle />
-          <span>
-            Suporte
-            <br />
-            Fale conosco
-          </span>
-        </button>
+        {canUseChat && (
+          <>
+            <div className={styles.mobileBottomDivider} />
+            <button
+              type="button"
+              onClick={() =>
+                miniChatRef.current?.scrollIntoView({
+                  behavior: "smooth",
+                  block: "end",
+                })
+              }
+              className={styles.supportButton}
+            >
+              <MessageCircle />
+              <span>
+                Suporte
+                <br />
+                Fale conosco
+              </span>
+            </button>
+          </>
+        )}
       </div>
 
       {showCancelModal && (

@@ -12,7 +12,7 @@ const api = axios.create({
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem("token");
 
-  if (token) {
+  if (token && !config.headers.has("X-Order-Token")) {
     config.headers.Authorization = `Bearer ${token}`;
   }
 

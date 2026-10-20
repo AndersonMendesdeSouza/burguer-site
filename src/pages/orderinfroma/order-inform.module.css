@@ -1052,6 +1052,10 @@
     font-weight: 800;
   }
 
+  .mobileBottomBarWithoutChat {
+    grid-template-columns: 1fr;
+  }
+
   .mobileBottomTotal {
     color: var(--yellow);
     font-size: 15px;

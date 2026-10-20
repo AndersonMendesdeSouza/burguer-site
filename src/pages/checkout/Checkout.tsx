@@ -26,6 +26,7 @@ import { AddressService } from "../../service/address.service";
 import { UserService } from "../../service/user.service";
 import { getRequestErrorMessage } from "../../utils/getRequestErrorMessage";
 import TableIdentifiedModal from "../../components/TableIdentifiedMesa/TableIdentifiedModal";
+import { useAuth } from "../../contexts/AuthContext";
 
 type CartItem = {
   id: string;
@@ -93,6 +94,7 @@ function formatAddressDetails(address: AddressResponseDto) {
 export default function Checkout() {
   const nav = useNavigate();
   const location = useLocation();
+  const { isAuthenticated, loading: authLoading } = useAuth();
   const state = (location.state || {}) as Partial<CheckoutNavState>;
   const items = state.items || [];
   const baseDeliveryFee =
@@ -130,6 +132,8 @@ export default function Checkout() {
     v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
   useEffect(() => {
+    if (!isAuthenticated) return;
+
     let active = true;
 
     async function loadInitialData() {
@@ -155,10 +159,10 @@ export default function Checkout() {
     return () => {
       active = false;
     };
-  }, []);
+  }, [isAuthenticated]);
 
   useEffect(() => {
-    if (isTableOrder) return;
+    if (isTableOrder || !isAuthenticated || authLoading) return;
 
     let active = true;
 
@@ -205,7 +209,7 @@ export default function Checkout() {
     return () => {
       active = false;
     };
-  }, [isTableOrder]);
+  }, [isTableOrder, isAuthenticated, authLoading]);
 
   useEffect(() => {
     if (payment !== PaymentMethod.CASH) {
@@ -224,7 +228,7 @@ export default function Checkout() {
 
   const step2Done = isTableOrder
     ? tableNumber.trim().length > 0
-    : !!selectedAddress && !loadingAddresses && !addressError;
+    : isAuthenticated && !!selectedAddress && !loadingAddresses && !addressError;
 
   const step3Done =
     payment !== PaymentMethod.CASH ||
@@ -236,6 +240,7 @@ export default function Checkout() {
     step1Done &&
     step2Done &&
     step3Done &&
+    !authLoading &&
     !isSubmitting;
 
   const openNow = storeStatus.openNow;
@@ -525,7 +530,23 @@ export default function Checkout() {
               <span>Endereço de entrega</span>
             </div>
 
-            {addressError ? (
+            {!isAuthenticated ? (
+              <div className={styles.emptyAddressCard}>
+                <div className={styles.emptyAddressTitle}>
+                  Entre na sua conta para pedir entrega
+                </div>
+                <div className={styles.emptyAddressDesc}>
+                  Para pedir na mesa, basta informar seus dados e o número da mesa.
+                </div>
+                <button
+                  type="button"
+                  className={styles.useNewBtn}
+                  onClick={() => nav("/login")}
+                >
+                  Entrar na conta
+                </button>
+              </div>
+            ) : addressError ? (
               <div className={styles.emptyAddressCard}>
                 <div className={styles.emptyAddressTitle}>{addressError}</div>
                 <button

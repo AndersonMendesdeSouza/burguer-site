@@ -13,7 +13,7 @@ type OrderHistory = {
 export interface OrderResponseDto {
   id: string;
   mesaId?: string;
-  userId: string;
+  userId: string | null;
   addressId?: string;
   chatId?: string;
   address?: AddressResponseDto;
@@ -31,4 +31,8 @@ export interface OrderResponseDto {
   history: OrderHistory[];
   createdAt: string;
   updatedAt: string;
+}
+
+export interface OrderCreatedResponseDto extends OrderResponseDto {
+  guestToken?: string;
 }

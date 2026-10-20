@@ -10,6 +10,7 @@ import {
 import type { OrderResponseDto } from "../../dtos/response/order-response.dto";
 import { OrderService } from "../../service/order.service";
 import { formatOrderCode } from "../../utils/formatOrderCode";
+import { getOrderImageUrl, handleOrderImageError } from "../../utils/orderImage";
 import styles from "./Orders.module.css";
 
 type TabKey = "all" | "active" | "finished" | "canceled";
@@ -52,13 +53,6 @@ function getItemDescription(item: OrderResponseDto["items"][number]) {
   ].filter(Boolean);
 
   return parts.join(" • ");
-}
-
-function getFirstImage(order: OrderResponseDto) {
-  return (
-    order.items.find((item) => item.imageUrl)?.imageUrl ||
-    "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=240&q=80"
-  );
 }
 
 function getActiveStep(status: string): OrderStep {
@@ -144,7 +138,11 @@ function OrderCard({
       <div className={styles.items}>
         {order.items.map((item, index) => (
           <div key={`${item.id}-${index}`} className={styles.orderItem}>
-            <img src={item.imageUrl || getFirstImage(order)} alt={item.name} />
+            <img
+              src={getOrderImageUrl(item.imageUrl)}
+              alt={item.name}
+              onError={handleOrderImageError}
+            />
             <div>
               <strong>{item.name}</strong>
               <p>{getItemDescription(item)}</p>
