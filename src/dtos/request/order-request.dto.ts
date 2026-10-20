@@ -6,7 +6,7 @@ export interface OrderRequestDto {
   paymentMethod: PaymentMethodEnum;
   customerName: string;
   customerPhone: string;
-  addressId: string;
+  addressId?: string;
   subtotal: number;
   deliveryFee: number;
   discount: number;

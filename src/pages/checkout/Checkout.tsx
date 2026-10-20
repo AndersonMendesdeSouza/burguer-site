@@ -10,6 +10,8 @@ import {
   Check,
   Send,
   Home,
+  UtensilsCrossed,
+  Truck,
 } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { toast, ToastContainer } from "react-toastify";
@@ -23,6 +25,7 @@ import { CART_STORAGE_KEY, notifyCartUpdated } from "../../utils/cartStorage";
 import { AddressService } from "../../service/address.service";
 import { UserService } from "../../service/user.service";
 import { getRequestErrorMessage } from "../../utils/getRequestErrorMessage";
+import TableIdentifiedModal from "../../components/TableIdentifiedMesa/TableIdentifiedModal";
 
 type CartItem = {
   id: string;
@@ -92,13 +95,9 @@ export default function Checkout() {
   const location = useLocation();
   const state = (location.state || {}) as Partial<CheckoutNavState>;
   const items = state.items || [];
-  const deliveryFee =
+  const baseDeliveryFee =
     typeof state.deliveryFee === "number" ? state.deliveryFee : 0;
   const subtotal = typeof state.subtotal === "number" ? state.subtotal : 0;
-  const total =
-    typeof state.total === "number"
-      ? state.total
-      : subtotal + (items.length ? deliveryFee : 0);
   const orderObs = state.orderObs || "";
   const [fullName, setFullName] = useState("");
   const [phone, setPhone] = useState("");
@@ -106,6 +105,16 @@ export default function Checkout() {
   const [cashChange, setCashChange] = useState("");
   const [needChange, setNeedChange] = useState<boolean | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showTableConfirmation, setShowTableConfirmation] = useState(false);
+  const [tableNumber, setTableNumber] = useState(
+    () => sessionStorage.getItem("mesaId")?.trim() || "",
+  );
+  const [orderType, setOrderType] = useState<"table" | "delivery">(
+    () => (sessionStorage.getItem("mesaId")?.trim() ? "table" : "delivery"),
+  );
+  const isTableOrder = orderType === "table";
+  const deliveryFee = !isTableOrder && items.length ? baseDeliveryFee : 0;
+  const total = subtotal + deliveryFee;
   const storeStatus = useStoreStatus();
 
   const [savedAddresses, setSavedAddresses] = useState<AddressResponseDto[]>(
@@ -139,6 +148,22 @@ export default function Checkout() {
           setPhone("");
         }
       }
+    }
+
+    void loadInitialData();
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (isTableOrder) return;
+
+    let active = true;
+
+    async function loadAddresses() {
+      setLoadingAddresses(true);
 
       try {
         const data = await AddressService.findAll();
@@ -175,12 +200,12 @@ export default function Checkout() {
       }
     }
 
-    void loadInitialData();
+    void loadAddresses();
 
     return () => {
       active = false;
     };
-  }, []);
+  }, [isTableOrder]);
 
   useEffect(() => {
     if (payment !== PaymentMethod.CASH) {
@@ -197,7 +222,9 @@ export default function Checkout() {
   const step1Done =
     fullName.trim().length > 0 && onlyDigits(phone).length >= 10;
 
-  const step2Done = !!selectedAddress;
+  const step2Done = isTableOrder
+    ? tableNumber.trim().length > 0
+    : !!selectedAddress && !loadingAddresses && !addressError;
 
   const step3Done =
     payment !== PaymentMethod.CASH ||
@@ -209,7 +236,6 @@ export default function Checkout() {
     step1Done &&
     step2Done &&
     step3Done &&
-    !loadingAddresses &&
     !isSubmitting;
 
   const openNow = storeStatus.openNow;
@@ -220,8 +246,6 @@ export default function Checkout() {
   }
 
   function buildOrderPayload(): OrderRequestDto {
-    const mesaId = sessionStorage.getItem('mesaId')
-    alert(mesaId)
     const extraInfo = [
       orderObs.trim() ? `Obs pedido: ${orderObs.trim()}` : "",
       payment === PaymentMethod.CASH && needChange === true
@@ -231,13 +255,13 @@ export default function Checkout() {
     const orderObservation = extraInfo.join(" | ");
 
     return {
-      mesaId: mesaId ?? null,
+      mesaId: isTableOrder ? tableNumber.trim() : undefined,
       paymentMethod: payment,
       customerName: fullName.trim(),
       customerPhone: onlyDigits(phone),
-      addressId: selectedAddress?.id || "",
+      addressId: isTableOrder ? undefined : selectedAddress?.id,
       subtotal,
-      deliveryFee: items.length ? deliveryFee : 0,
+      deliveryFee,
       discount: 0,
       total,
       items: items.map((item, index) => ({
@@ -256,7 +280,7 @@ export default function Checkout() {
     };
   }
 
-  async function handleCreateOrder() {
+  async function handleCreateOrder(tableConfirmed = false) {
     if (!canSend) {
       alert("Preencha os dados obrigatórios do pedido");
       return;
@@ -278,6 +302,11 @@ export default function Checkout() {
       return;
     }
 
+    if (isTableOrder && !tableConfirmed) {
+      setShowTableConfirmation(true);
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
@@ -292,6 +321,7 @@ export default function Checkout() {
       });
       localStorage.removeItem(CART_STORAGE_KEY);
     } catch (error) {
+      setShowTableConfirmation(false);
       toast.error(getRequestErrorMessage(error, "Erro ao criar pedido"), {
         autoClose: 3000,
       });
@@ -314,6 +344,17 @@ export default function Checkout() {
       }
     >
       <ToastContainer position="top-center" />
+      {isTableOrder && showTableConfirmation && (
+        <TableIdentifiedModal
+          tableNumber={tableNumber.trim()}
+          title="Confirmar mesa do pedido"
+          description="Seu pedido será direcionado para esta mesa. Confirma?"
+          closeLabel="Cancelar"
+          isConfirming={isSubmitting}
+          onClose={() => setShowTableConfirmation(false)}
+          onConfirm={() => void handleCreateOrder(true)}
+        />
+      )}
       <div className={styles.content}>
         <header className={styles.header}>
           <button
@@ -424,100 +465,153 @@ export default function Checkout() {
               />
             </label>
           </div>
-        </section>
 
-        <section className={styles.section}>
-          <div className={styles.sectionTitle}>
-            <Home size={16} />
-            <span>Endereço de entrega</span>
+          <div className={styles.orderTypeField}>
+            <span className={styles.label} id="order-type-label">
+              Como você quer receber seu pedido?
+            </span>
+            <div
+              className={styles.orderTypeSwitch}
+              role="group"
+              aria-labelledby="order-type-label"
+            >
+              <button
+                type="button"
+                className={`${styles.orderTypeButton} ${isTableOrder ? styles.orderTypeActive : ""}`}
+                aria-pressed={isTableOrder}
+                onClick={() => setOrderType("table")}
+              >
+                <UtensilsCrossed size={16} aria-hidden="true" />
+                Na mesa
+              </button>
+              <button
+                type="button"
+                className={`${styles.orderTypeButton} ${!isTableOrder ? styles.orderTypeActive : ""}`}
+                aria-pressed={!isTableOrder}
+                onClick={() => setOrderType("delivery")}
+              >
+                <Truck size={16} aria-hidden="true" />
+                Para entrega
+              </button>
+            </div>
           </div>
-
-          {addressError ? (
-            <div className={styles.emptyAddressCard}>
-              <div className={styles.emptyAddressTitle}>{addressError}</div>
-              <button
-                type="button"
-                className={styles.useNewBtn}
-                onClick={() =>
-                  nav("/perfil", { state: { openAddresses: true } })
-                }
-              >
-                Gerenciar endereços
-              </button>
-            </div>
-          ) : loadingAddresses ? (
-            <div className={styles.emptyAddressCard}>
-              <div className={styles.emptyAddressTitle}>
-                Carregando endereços...
-              </div>
-            </div>
-          ) : savedAddresses.length === 0 ? (
-            <div className={styles.emptyAddressCard}>
-              <div className={styles.emptyAddressTitle}>
-                Nenhum endereço cadastrado
-              </div>
-              <div className={styles.emptyAddressDesc}>
-                Cadastre um endereço no perfil para finalizar o pedido.
-              </div>
-              <button
-                type="button"
-                className={styles.useNewBtn}
-                onClick={() =>
-                  nav("/perfil", { state: { openAddresses: true } })
-                }
-              >
-                Cadastrar endereço
-              </button>
-            </div>
-          ) : (
-            <div className={styles.addressList}>
-              {savedAddresses.map((address) => {
-                const active = address.id === selectedAddressId;
-                return (
-                  <button
-                    key={address.id}
-                    type="button"
-                    className={`${styles.addressCard} ${active ? styles.addressCardActive : ""
-                      }`}
-                    onClick={() => handleSelectAddress(address.id)}
-                  >
-                    <div className={styles.addressTopRow}>
-                      <div className={styles.addressTitle}>
-                        {address.street}, {address.number}
-                      </div>
-                      {address.isDefault ? (
-                        <span className={styles.addressBadge}>Padrão</span>
-                      ) : null}
-                    </div>
-                    <div className={styles.addressMeta}>
-                      <span>{formatAddressDetails(address)}</span>
-                    </div>
-                    {address.complement ? (
-                      <div className={styles.addressComp}>
-                        {address.complement}
-                      </div>
-                    ) : null}
-                    {address.reference ? (
-                      <div className={styles.addressComp}>
-                        {address.reference}
-                      </div>
-                    ) : null}
-                  </button>
-                );
-              })}
-
-              <button
-                type="button"
-                className={styles.useNewBtn}
-                onClick={() =>
-                  nav("/perfil", { state: { openAddresses: true } })
-                }
-              >
-                Gerenciar endereços
-              </button>
-            </div>
-          )}
         </section>
+
+        {isTableOrder ? (
+          <section className={styles.section}>
+            <div className={styles.sectionTitle}>
+              <UtensilsCrossed size={16} />
+              <span>Pedido na mesa</span>
+            </div>
+            <label className={styles.field}>
+              <span className={styles.label}>Número da mesa</span>
+              <input
+                className={styles.input}
+                value={tableNumber}
+                onChange={(event) => setTableNumber(event.target.value)}
+                placeholder="Informe o número da mesa"
+                inputMode="numeric"
+                required
+              />
+              <span className={styles.label}>
+                Seu pedido será levado até esta mesa, sem taxa de entrega.
+              </span>
+            </label>
+          </section>
+        ) : (
+          <section className={styles.section}>
+            <div className={styles.sectionTitle}>
+              <Home size={16} />
+              <span>Endereço de entrega</span>
+            </div>
+
+            {addressError ? (
+              <div className={styles.emptyAddressCard}>
+                <div className={styles.emptyAddressTitle}>{addressError}</div>
+                <button
+                  type="button"
+                  className={styles.useNewBtn}
+                  onClick={() =>
+                    nav("/perfil", { state: { openAddresses: true } })
+                  }
+                >
+                  Gerenciar endereços
+                </button>
+              </div>
+            ) : loadingAddresses ? (
+              <div className={styles.emptyAddressCard}>
+                <div className={styles.emptyAddressTitle}>
+                  Carregando endereços...
+                </div>
+              </div>
+            ) : savedAddresses.length === 0 ? (
+              <div className={styles.emptyAddressCard}>
+                <div className={styles.emptyAddressTitle}>
+                  Nenhum endereço cadastrado
+                </div>
+                <div className={styles.emptyAddressDesc}>
+                  Cadastre um endereço no perfil para finalizar o pedido.
+                </div>
+                <button
+                  type="button"
+                  className={styles.useNewBtn}
+                  onClick={() =>
+                    nav("/perfil", { state: { openAddresses: true } })
+                  }
+                >
+                  Cadastrar endereço
+                </button>
+              </div>
+            ) : (
+              <div className={styles.addressList}>
+                {savedAddresses.map((address) => {
+                  const active = address.id === selectedAddressId;
+                  return (
+                    <button
+                      key={address.id}
+                      type="button"
+                      className={`${styles.addressCard} ${active ? styles.addressCardActive : ""
+                        }`}
+                      onClick={() => handleSelectAddress(address.id)}
+                    >
+                      <div className={styles.addressTopRow}>
+                        <div className={styles.addressTitle}>
+                          {address.street}, {address.number}
+                        </div>
+                        {address.isDefault ? (
+                          <span className={styles.addressBadge}>Padrão</span>
+                        ) : null}
+                      </div>
+                      <div className={styles.addressMeta}>
+                        <span>{formatAddressDetails(address)}</span>
+                      </div>
+                      {address.complement ? (
+                        <div className={styles.addressComp}>
+                          {address.complement}
+                        </div>
+                      ) : null}
+                      {address.reference ? (
+                        <div className={styles.addressComp}>
+                          {address.reference}
+                        </div>
+                      ) : null}
+                    </button>
+                  );
+                })}
+
+                <button
+                  type="button"
+                  className={styles.useNewBtn}
+                  onClick={() =>
+                    nav("/perfil", { state: { openAddresses: true } })
+                  }
+                >
+                  Gerenciar endereços
+                </button>
+              </div>
+            )}
+          </section>
+        )}
 
         <section className={styles.section}>
           <div className={styles.sectionTitle}>
@@ -561,7 +655,9 @@ export default function Checkout() {
                 </div>
                 <div className={styles.payTexts}>
                   <div className={styles.payName}>Cartão de crédito</div>
-                  <div className={styles.payDesc}>Pagamento na entrega</div>
+                  <div className={styles.payDesc}>
+                    {isTableOrder ? "Pagamento no estabelecimento" : "Pagamento na entrega"}
+                  </div>
                 </div>
               </div>
               <div
@@ -582,7 +678,9 @@ export default function Checkout() {
                 </div>
                 <div className={styles.payTexts}>
                   <div className={styles.payName}>Cartão de débito</div>
-                  <div className={styles.payDesc}>Pagamento na entrega</div>
+                  <div className={styles.payDesc}>
+                    {isTableOrder ? "Pagamento no estabelecimento" : "Pagamento na entrega"}
+                  </div>
                 </div>
               </div>
               <div
@@ -696,7 +794,7 @@ export default function Checkout() {
           className={styles.sendBtn}
           type="button"
           disabled={!canSend}
-          onClick={handleCreateOrder}
+          onClick={() => void handleCreateOrder()}
         >
           <span className={styles.sendLeft}>
             <Send size={18} />

@@ -223,6 +223,50 @@
   gap: 10px;
 }
 
+.orderTypeField {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.orderTypeSwitch {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 4px;
+  padding: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  background: rgba(0, 0, 0, 0.18);
+}
+
+.orderTypeButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 10px 8px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--textSecondary);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.orderTypeActive {
+  background: var(--highlight);
+  color: #111;
+}
+
+.orderTypeButton:focus-visible {
+  outline: 2px solid var(--highlight);
+  outline-offset: 2px;
+}
+
 .field {
   display: flex;
   flex-direction: column;

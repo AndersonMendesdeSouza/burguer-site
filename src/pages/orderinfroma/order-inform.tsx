@@ -272,6 +272,13 @@ export default function OrderInform() {
   const tableNumber = order?.mesaId?.trim();
   const orderPaymentLabel = paymentLabel(orderPaymentMethod);
   const PaymentStatusIcon = paymentIcon(orderPaymentMethod);
+  const orderStatuses = statuses.map((step) => {
+    if (tableNumber && step.status === "ON_ROUTE") {
+      return { ...step, label: "A caminho da mesa", icon: UtensilsCrossed };
+    }
+
+    return step;
+  });
   const stateAddressLine = state.address?.street
     ? `${state.address.street}${state.address.number ? `, ${state.address.number}` : ""}`
     : "";
@@ -308,10 +315,13 @@ export default function OrderInform() {
     : "Acompanhe o status do seu pedido em tempo real.";
   const detailRows: DetailRow[] = [
     {
-      icon: MapPin,
-      label: "Endereco",
-      value: `${addressLine}${addressSub ? `\n${addressSub}` : ""}`,
-      action: addressLine !== "Nao informado" ? "Ver no mapa" : undefined,
+      icon: tableNumber ? UtensilsCrossed : MapPin,
+      label: tableNumber ? "Mesa" : "Endereco",
+      value: tableNumber
+        ? `Mesa ${tableNumber}`
+        : `${addressLine}${addressSub ? `\n${addressSub}` : ""}`,
+      action:
+        !tableNumber && addressLine !== "Nao informado" ? "Ver no mapa" : undefined,
       actionIcon: Map,
     },
     {
@@ -457,7 +467,7 @@ export default function OrderInform() {
               )}
             />
 
-            {statuses.map((step, index) => {
+            {orderStatuses.map((step, index) => {
               const Icon = step.icon;
               const active = index === activeStatus;
               const completed = index < activeStatus;
@@ -556,7 +566,7 @@ export default function OrderInform() {
               <div className={cx(styles.sectionTitle, styles.sectionTitleBetween)}>
                 <span className={styles.sectionTitleLabel}>
                   <MapPin />
-                  Entrega
+                  {tableNumber ? "Entrega na mesa" : "Entrega"}
                 </span>
                 {tableNumber ? (
                   <span className={styles.tableBadge}>
@@ -620,7 +630,7 @@ export default function OrderInform() {
                 Acompanhe seu pedido
               </div>
 
-              {statuses.map((step, index) => {
+              {orderStatuses.map((step, index) => {
                 const active = index === activeStatus;
                 const completed = index < activeStatus;
                 const done = completed || active;
@@ -638,7 +648,7 @@ export default function OrderInform() {
                     )}
                   >
                     <div className={styles.timelineMarker}>
-                      {index < statuses.length - 1 ? (
+                      {index < orderStatuses.length - 1 ? (
                         <div
                           className={cx(
                             styles.timelineLine,
