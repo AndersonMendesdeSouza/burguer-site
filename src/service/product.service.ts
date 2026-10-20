@@ -3,9 +3,10 @@ import api, { API_BASE_URL } from "./api";
 
 
 type ProductImageResponse = {
-  id: string;
-  fileName: string;
-  url: string;
+  id: number;
+  imageUrl?: string | null;
+  imagePublicId?: string | null;
+  url?: string;
   isPrimary: boolean;
 };
 
@@ -68,7 +69,7 @@ function mapProduct(product: ProductResponse): FoodResponseDto {
       promoPrice !== undefined && promoPrice < basePrice ? basePrice : undefined,
     badge:
       promoPrice !== undefined && promoPrice < basePrice ? "PROMOÇÃO" : undefined,
-    img: resolveImageUrl(primaryImage?.url),
+    img: resolveImageUrl(primaryImage?.imageUrl || primaryImage?.url),
     category: CATEGORY_LABELS[product.category] || "Outros",
     addons: (product.addons || [])
       .filter((addon) => addon.isActive !== false)
